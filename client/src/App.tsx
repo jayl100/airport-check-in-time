@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import formatSeconds from './util/formatter.ts';
 
 interface IAirportCheckInTime {
   airport_code: string;
   processed_at: string;
-  wait_avg_all: number;
-  wait_avg_a: number;
-  wait_avg_b: number;
-  wait_avg_c: number;
-  wait_avg_d: number;
+  wait_all: number;
+  wait_a: number;
+  wait_b: number;
+  wait_c: number;
+  wait_d: number;
 }
 
 function App() {
@@ -42,11 +43,11 @@ function App() {
           <tr key={i}>
             <td>{item.airport_code}</td>
             <td>{item.processed_at}</td>
-            <td>{item.wait_avg_all}</td>
-            <td>{item.wait_avg_a}</td>
-            <td>{item.wait_avg_b}</td>
-            <td>{item.wait_avg_c}</td>
-            <td>{item.wait_avg_d}</td>
+            <td>{formatSeconds(item.wait_all)}</td>
+            <td>{formatSeconds(item.wait_a)}</td>
+            <td>{formatSeconds(item.wait_b)}</td>
+            <td>{formatSeconds(item.wait_c)}</td>
+            <td>{formatSeconds(item.wait_d)}</td>
           </tr>
         ))}
         </tbody>
