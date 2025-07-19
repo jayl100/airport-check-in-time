@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
-import formatSeconds from './util/formatter.ts';
+import formatSeconds from './util/formatter';
 
 interface IAirportCheckInTime {
   airport_code: string;
