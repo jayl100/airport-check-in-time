@@ -5,12 +5,11 @@ import fetchAndSaveWaitTime from './fetcher.js';
 import cors from 'cors';
 
 dotenv.config();
-app.use(cors());
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-
+app.use(cors());
 
 // ⏰ 5분마다 실행
 cron.schedule('*/5 * * * *', fetchAndSaveWaitTime);
