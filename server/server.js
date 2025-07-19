@@ -26,7 +26,6 @@ app.get('/api/wait-times', async (req, res) => {
     page = 1,
     limit = 20,
   } = req.query;
-
   const where = {};
 
   if (airport) where.airport_code = airport;

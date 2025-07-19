@@ -5,6 +5,7 @@ class AirportWaitTime extends Model {}
 
 AirportWaitTime.init({
   airport_code: { type: DataTypes.STRING, allowNull: false },
+  opr_status: DataTypes.INTEGER,
   processed_at: { type: DataTypes.STRING, allowNull: false },
   wait_all: DataTypes.INTEGER,
   wait_a: DataTypes.INTEGER,
