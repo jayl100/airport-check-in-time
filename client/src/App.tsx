@@ -15,13 +15,14 @@ function App() {
   const [waitTimes, setWaitTimes] = useState([]);
 
   useEffect(() => {
-    fetch('https://your-render-backend-url.com/api/wait-times')
+    fetch('https://airport-check-in-time.onrender.com/api/wait-times')
     .then(res => res.json())
     .then(data => setWaitTimes(data))
     .catch(err => console.error('불러오기 실패:', err));
   }, []);
 
   return (
+    <>
     <div className="App">
       <h1>공항 대기 시간</h1>
       <table>
@@ -51,6 +52,7 @@ function App() {
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 

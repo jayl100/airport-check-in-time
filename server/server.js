@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import fetchAndSaveWaitTime from './fetcher.js';
 import cors from 'cors';
+import pool from './db.js';
 
 dotenv.config();
 
