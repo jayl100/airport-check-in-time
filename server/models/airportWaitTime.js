@@ -1,9 +1,8 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../db/sequelize.js';
 import dayjs from 'dayjs';
-// import dayjs from 'dayjs';
-// import utc from 'dayjs/plugin/utc.js';
-// import timezone from 'dayjs/plugin/timezone.js';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
