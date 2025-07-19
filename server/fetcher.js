@@ -91,6 +91,11 @@ async function saveToDB(code, data) {
         wait_d: STY_TCT_AVG_D,
       });
     }
+
+    await AirportWaitTime.bulkCreate(rows, {
+      individualHooks: true, // ✅ created_at_kst 자동 설정을 위해 필요
+    });
+
     console.log(`✅ 저장 완료 (${data.length}건)`);
   } catch (err) {
     console.error('[❌] 저장 실패:', err.response?.status, err.response?.data || err.message);
