@@ -1,7 +1,7 @@
 // 📁 server/routes/waitTimes.js
 import express from 'express';
 import { Op, Sequelize } from 'sequelize';
-import AirportWaitTime from '../models/AirportWaitTime.js';
+import AirportWaitTime from '../models/airportWaitTime.js';
 
 const router = express.Router();
 
