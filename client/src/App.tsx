@@ -47,73 +47,47 @@ function App() {
     };
     fetch();
   }, [selectedDate, selectedAirport]);
-  // ✅ 첫 진입 시: 날짜, 공항 목록 불러오기 + 최근 데이터 세팅
+
   useEffect(() => {
-    const fetchInit = async () => {
+    const fetchInitial = async () => {
       try {
-        const [dateRes, airportRes] = await Promise.all([
-          getAvailableDates(),
-          getAvailableAirports(),
-        ]);
+        const airports = await getAvailableAirports();
+        const dates = await getAvailableDates();
+        setAirportList(airports.data);
+        setDateList(dates.data);
 
-        const dates = dateRes.data;
-        const airports = airportRes.data;
+        const recentAirport = airports.data[0] || '';
+        const recentDate = dates.data[0] || '';
 
-        setDateList(dates);
-        setAirportList(airports);
-
-        if (dates.length > 0 && airports.length > 0) {
-          const latestDate = dates[0];
-          const defaultAirport = airports.includes('GMP') ? 'GMP' : airports[0];
-
-          setSelectedDate(latestDate);
-          setSelectedAirport(defaultAirport);
-
-          const hoursRes = await getAvailableHours(latestDate, defaultAirport);
-          const hours = hoursRes.data;
-          setHourList(hours);
-
-          if (hours.length > 0) {
-            const latestHour = hours[hours.length - 1]; // 가장 최근 시간 선택
-            setSelectedHour(latestHour);
-
-            const res = await getWaitTimes({
-              airport: defaultAirport,
-              date: latestDate,
-              hour: latestHour,
-              page: 1,
-              limit: 20,
-            });
-            setData(res.data);
-          }
-        }
+        setSelectedAirport(recentAirport);
+        setSelectedDate(recentDate);
       } catch (err) {
-        console.error('초기 데이터 불러오기 실패:', err);
+        console.error('초기 정보 불러오기 실패:', err);
       }
     };
-    fetchInit();
+    fetchInitial();
   }, []);
 
-  // 날짜 변경 시 시간 목록 갱신
+  // ✅ 날짜/공항 바뀌면 시간 목록 가져오기
   useEffect(() => {
     if (!selectedDate || !selectedAirport) return;
-    const fetch = async () => {
+
+    const fetchHours = async () => {
       try {
         const res = await getAvailableHours(selectedDate, selectedAirport);
-        const hours = res.data;
-        setHourList(hours);
-        setSelectedHour('');
-        setData([]);
+        setHourList(res.data);
+        setSelectedHour(res.data[res.data.length - 1] || ''); // 가장 최근 시간 자동 선택
       } catch (err) {
-        console.error(err);
+        console.error('시간 목록 불러오기 실패:', err);
       }
     };
-    fetch();
+    fetchHours();
   }, [selectedDate, selectedAirport]);
 
-  // 검색 실행 (date + hour + airport)
+  // ✅ 검색
   useEffect(() => {
-    if (!selectedDate || !selectedHour || !selectedAirport) return;
+    if (!selectedAirport || !selectedDate || !selectedHour) return;
+
     const fetch = async () => {
       setLoading(true);
       try {
@@ -124,55 +98,54 @@ function App() {
           page: 1,
           limit: 20,
         });
-        setData(res.data);
+        setData(res.data); // API가 { data: [], total: ... } 구조
       } catch (err) {
-        console.error('불러오기 실패:', err);
+        console.error('대기 시간 데이터 불러오기 실패:', err);
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
+
     fetch();
-  }, [selectedDate, selectedHour, selectedAirport]);
+  }, [selectedAirport, selectedDate, selectedHour]);
 
   if (loading) return <p>로딩 중...</p>;
 
   return (
     <div className="App">
       <h1>공항 대기 시간</h1>
-      <p>현재 김포공항과 제주공항만 서비스 합니다.</p>
-      <label>
-        공항:
-        <select value={selectedAirport} onChange={(e) => setSelectedAirport(e.target.value)}>
-          <option value="">선택</option>
-          {airportList.map((airport) => (
-            <option key={airport} value={airport}>
-              {airport}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        날짜:
-        <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}>
-          <option value="">선택</option>
-          {dateList.map((date) => (
-            <option key={date} value={date}>
-              {date}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        시간:
-        <select value={selectedHour} onChange={(e) => setSelectedHour(e.target.value)}>
-          <option value="">선택</option>
-          {hourList.map((hour) => (
-            <option key={hour} value={hour}>
-              {hour}시
-            </option>
-          ))}
-        </select>
-      </label>
+      <p>현재 김포공항과 제주공항만 서비스합니다.</p>
+
+      <div>
+        <label>
+          공항:
+          <select value={selectedAirport} onChange={e => setSelectedAirport(e.target.value)}>
+            {airportList.map(airport => (
+              <option key={airport} value={airport}>{airport}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          날짜:
+          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)}>
+            {dateList.map(date => (
+              <option key={date} value={date}>{date}</option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          시간:
+          <select value={selectedHour} onChange={e => setSelectedHour(e.target.value)}>
+            {hourList.map(hour => (
+              <option key={hour} value={hour}>{hour}시</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <table>
         <thead>
         <tr>
