@@ -2,6 +2,7 @@ import axios from 'axios';
 import pool from './db.js';
 import qs from 'qs';
 import dotenv from 'dotenv';
+import AirportWaitTime from './models/airportWaitTime.js';
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ async function fetchAndSaveWaitTime() {
   const results = [];
 
   for (const code of AIRPORT_CODES) {
-    const data = await fetchcOnly(code);
+    const data = await fetchOnly(code);
     results.push({ code, data });
   }
 
@@ -23,7 +24,7 @@ async function fetchAndSaveWaitTime() {
     }
   }
 
-  async function fetchcOnly(code) {
+  async function fetchOnly(code) {
     const tryFetch = async(retry = false) => {
       console.log(`📡 요청 중: ${code}${retry ? ' (재시도)' : ''}`);
 
@@ -79,21 +80,16 @@ async function saveToDB(code, data) {
         STY_TCT_AVG_D,
       } = row;
 
-      await pool.query(
-        `INSERT INTO airport_wait_time
-         (airport_code, opr_status, processed_at, wait_all, wait_a, wait_b, wait_c, wait_d)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [
-          IATA_APCD,
-          OPR_STS_CD,
-          PRC_HR,
-          STY_TCT_AVG_ALL,
-          STY_TCT_AVG_A,
-          STY_TCT_AVG_B,
-          STY_TCT_AVG_C,
-          STY_TCT_AVG_D,
-        ]
-      );
+      await AirportWaitTime.create({
+        airport_code: IATA_APCD,
+        opr_status: OPR_STS_CD,
+        processed_at: PRC_HR,
+        wait_all: STY_TCT_AVG_ALL,
+        wait_a: STY_TCT_AVG_A,
+        wait_b: STY_TCT_AVG_B,
+        wait_c: STY_TCT_AVG_C,
+        wait_d: STY_TCT_AVG_D,
+      });
     }
     console.log(`✅ 저장 완료 (${data.length}건)`);
   } catch (err) {

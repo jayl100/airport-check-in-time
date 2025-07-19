@@ -19,3 +19,4 @@ pool.query('SELECT 1')
   .catch((err) => console.error('❌ DB 연결 실패:', err.message));
 
 export default pool;
+
