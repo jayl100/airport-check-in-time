@@ -68,7 +68,7 @@ async function fetchAndSaveWaitTime() {
 
 async function saveToDB(code, data) {
   try {
-    for (const row of data) {
+    const rows = data.map((row) => {
       const {
         IATA_APCD,
         OPR_STS_CD,
@@ -80,7 +80,7 @@ async function saveToDB(code, data) {
         STY_TCT_AVG_D,
       } = row;
 
-      await AirportWaitTime.create({
+      return {
         airport_code: IATA_APCD,
         opr_status: OPR_STS_CD,
         processed_at: PRC_HR,
@@ -89,8 +89,10 @@ async function saveToDB(code, data) {
         wait_b: STY_TCT_AVG_B,
         wait_c: STY_TCT_AVG_C,
         wait_d: STY_TCT_AVG_D,
-      });
-    }
+        // created_at: 생략하면 defaultValue로 NOW 적용됨
+        // created_at_kst: Sequelize 훅에서 자동으로 설정됨
+      };
+    });
 
     await AirportWaitTime.bulkCreate(rows, {
       individualHooks: true, // ✅ created_at_kst 자동 설정을 위해 필요
