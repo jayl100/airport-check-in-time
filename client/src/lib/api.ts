@@ -11,19 +11,19 @@ export async function getWaitTimes(params: {
   return response.data;
 }
 
-// ✅ 사용 가능한 날짜 목록
-export const getAvailableDates = () => {
+// 날짜 목록 조회
+export async function getAvailableDates() {
   return http.get('/api/wait-times/dates');
-};
+}
 
-// ✅ 사용 가능한 시간 목록 (날짜 필수, 공항 선택)
-export const getAvailableHours = (date: string, airport?: string) => {
+// 시간 목록 조회
+export async function getAvailableHours(date: string, airport?: string) {
   return http.get('/api/wait-times/hours', {
     params: { date, airport },
   });
-};
+}
 
-// ✅ 사용 가능한 공항 목록
-export const getAvailableAirports = () => {
+// 공항 목록 조회
+export async function getAvailableAirports() {
   return http.get('/api/wait-times/airports');
-};
+}

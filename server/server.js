@@ -8,7 +8,6 @@ import { initializeDB } from './db/init.js';
 import { Op, Sequelize } from 'sequelize';
 import waitTimesRouter from './routes/waitTimesRoute.js';
 
-
 dotenv.config();
 
 const app = express();

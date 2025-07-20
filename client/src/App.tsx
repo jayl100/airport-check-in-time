@@ -27,68 +27,65 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedHour, setSelectedHour] = useState('');
   const [selectedAirport, setSelectedAirport] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!selectedDate) return;
-    const fetch = async () => {
-      try {
-        const res = await getAvailableHours(selectedDate, selectedAirport);
-        const hours = res.data;
-        setHourList(hours);
-
-        // 자동 선택: 최신 시간
-        if (hours.length > 0) {
-          setSelectedHour(hours[0]); // 가장 최신 시간 (예: '13')
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetch();
-  }, [selectedDate, selectedAirport]);
-
+  // 초기 진입 시 전체 공항의 최신 데이터 불러오기
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const airports = await getAvailableAirports();
-        const dates = await getAvailableDates();
-        setAirportList(airports.data);
-        setDateList(dates.data);
+        const [airports, dates] = await Promise.all([
+          getAvailableAirports(),
+          getAvailableDates(),
+        ]);
 
-        const recentAirport = airports.data[0] || '';
-        const recentDate = dates.data[0] || '';
+        const airportCodes = airports.data;
+        const dateOptions = dates.data;
 
-        setSelectedAirport(recentAirport);
-        setSelectedDate(recentDate);
+        setAirportList(airportCodes);
+        setDateList(dateOptions);
+
+        const latestDate = dateOptions[0];
+        setSelectedDate(latestDate);
+
+        // 모든 공항 데이터를 최신 시간 기준으로 한번에 불러오기
+        const allData: IAirportCheckInTime[] = [];
+
+        for (const airport of airportCodes) {
+          const hoursRes = await getAvailableHours(latestDate, airport);
+          const hourList = hoursRes.data;
+          if (!hourList.length) continue;
+
+          const latestHour = hourList[hourList.length - 1];
+
+          if (!selectedAirport) setSelectedAirport(airport);
+          if (!selectedHour) setSelectedHour(latestHour);
+
+          const waitRes = await getWaitTimes({
+            airport,
+            date: latestDate,
+            hour: latestHour,
+            page: 1,
+            limit: 20,
+          });
+          if (Array.isArray(waitRes?.data)) {
+            allData.push(...waitRes.data);
+          }
+        }
+
+        setData(allData);
       } catch (err) {
-        console.error('초기 정보 불러오기 실패:', err);
+        console.error('초기 데이터 로딩 실패:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchInitial();
   }, []);
 
-  // ✅ 날짜/공항 바뀌면 시간 목록 가져오기
+  // 선택 변경 시 데이터 갱신
   useEffect(() => {
-    if (!selectedDate || !selectedAirport) return;
-
-    const fetchHours = async () => {
-      try {
-        const res = await getAvailableHours(selectedDate, selectedAirport);
-        setHourList(res.data);
-        setSelectedHour(res.data[res.data.length - 1] || ''); // 가장 최근 시간 자동 선택
-      } catch (err) {
-        console.error('시간 목록 불러오기 실패:', err);
-      }
-    };
-    fetchHours();
-  }, [selectedDate, selectedAirport]);
-
-  // ✅ 검색
-  useEffect(() => {
-    if (!selectedAirport || !selectedDate || !selectedHour) return;
-
     const fetch = async () => {
+      if (!selectedAirport || !selectedDate || !selectedHour) return;
       setLoading(true);
       try {
         const res = await getWaitTimes({
@@ -98,30 +95,42 @@ function App() {
           page: 1,
           limit: 20,
         });
-        setData(res.data); // API가 { data: [], total: ... } 구조
+        setData(res.data || []);
       } catch (err) {
-        console.error('대기 시간 데이터 불러오기 실패:', err);
-        setData([]);
+        console.error('데이터 로딩 실패:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetch();
   }, [selectedAirport, selectedDate, selectedHour]);
 
-  if (loading) return <p>로딩 중...</p>;
+  useEffect(() => {
+    const loadHours = async () => {
+      if (!selectedDate || !selectedAirport) return;
+      try {
+        const res = await getAvailableHours(selectedDate, selectedAirport);
+        console.log(res);
+        setHourList(res.data);
+        setSelectedHour(res.data[res.data.length - 1] || '');
+      } catch (err) {
+        console.error('시간 목록 로딩 실패:', err);
+      }
+    };
+    loadHours();
+  }, [selectedDate, selectedAirport]);
 
   return (
     <div className="App">
-      <h1>공항 대기 시간</h1>
+      <img src="/GDT_favicon.svg" alt="logo" height="48px" />
+      <h1>공항 탑승시간 측정</h1>
       <p>현재 김포공항과 제주공항만 서비스합니다.</p>
 
       <div>
         <label>
           공항:
-          <select value={selectedAirport} onChange={e => setSelectedAirport(e.target.value)}>
-            {airportList.map(airport => (
+          <select value={selectedAirport} onChange={(e) => setSelectedAirport(e.target.value)}>
+            {airportList.map((airport) => (
               <option key={airport} value={airport}>{airport}</option>
             ))}
           </select>
@@ -129,8 +138,8 @@ function App() {
 
         <label>
           날짜:
-          <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)}>
-            {dateList.map(date => (
+          <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)}>
+            {dateList.map((date) => (
               <option key={date} value={date}>{date}</option>
             ))}
           </select>
@@ -138,40 +147,42 @@ function App() {
 
         <label>
           시간:
-          <select value={selectedHour} onChange={e => setSelectedHour(e.target.value)}>
-            {hourList.map(hour => (
+          <select value={selectedHour} onChange={(e) => setSelectedHour(e.target.value)}>
+            {hourList.map((hour) => (
               <option key={hour} value={hour}>{hour}시</option>
             ))}
           </select>
         </label>
       </div>
 
-      <table>
-        <thead>
-        <tr>
-          <th>공항</th>
-          <th>처리 시각</th>
-          <th>전체 평균</th>
-          <th>Gate A</th>
-          <th>Gate B</th>
-          <th>Gate C</th>
-          <th>Gate D</th>
-        </tr>
-        </thead>
-        <tbody>
-        {data.map((item, i) => (
-          <tr key={i}>
-            <td>{item.airport_code}</td>
-            <td>{item.processed_at}</td>
-            <td>{formatSeconds(item.wait_all)}</td>
-            <td>{formatSeconds(item.wait_a)}</td>
-            <td>{formatSeconds(item.wait_b)}</td>
-            <td>{formatSeconds(item.wait_c)}</td>
-            <td>{formatSeconds(item.wait_d)}</td>
+      {loading ? <p>로딩 중...</p> : (
+        <table>
+          <thead>
+          <tr>
+            <th>공항</th>
+            <th>처리 시각</th>
+            <th>전체 평균</th>
+            <th>Gate A</th>
+            <th>Gate B</th>
+            <th>Gate C</th>
+            <th>Gate D</th>
           </tr>
-        ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+          {data.map((item, i) => (
+            <tr key={i}>
+              <td>{item.airport_code}</td>
+              <td>{item.processed_at}</td>
+              <td>{formatSeconds(item.wait_all)}</td>
+              <td>{formatSeconds(item.wait_a)}</td>
+              <td>{formatSeconds(item.wait_b)}</td>
+              <td>{formatSeconds(item.wait_c)}</td>
+              <td>{formatSeconds(item.wait_d)}</td>
+            </tr>
+          ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

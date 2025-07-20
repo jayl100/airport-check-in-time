@@ -9,26 +9,19 @@ const router = express.Router();
 // ✅ 날짜 목록 조회
 router.get('/dates', async (req, res) => {
   try {
-    const result = await AirportWaitTime.findAll({
+    const dates = await AirportWaitTime.findAll({
       attributes: [
-        [Sequelize.fn(
-          'to_char',
-          Sequelize.literal(`created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul'`),
-          'YYYY-MM-DD'
-        ), 'kst_date']
+        [Sequelize.fn('DISTINCT', Sequelize.col('created_at_kst')), 'date'],
       ],
-      group: ['kst_date'],
-      order: [[Sequelize.literal('kst_date'), 'DESC']]
+      order: [[Sequelize.col('date'), 'DESC']],
     });
-
-    const dates = result.map(row => row.getDataValue('kst_date'));
-    res.json(dates);
+    const dateList = dates.map((row) => row.get('date'));
+    res.json(dateList);
   } catch (err) {
     console.error('❌ 날짜 조회 실패:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
-
 
 // ✅ 시간 목록 조회
 router.get('/hours', async (req, res) => {
@@ -36,51 +29,41 @@ router.get('/hours', async (req, res) => {
 
   if (!date) return res.status(400).json({ error: '날짜가 필요합니다.' });
 
+  const where = { created_at_kst: date };
+  if (airport) where.airport_code = airport;
+
   try {
-    const where = [];
-
-    if (airport) {
-      where.push(`airport_code = '${airport}'`);
-    }
-
-    where.push(`to_char(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD') = '${date}'`);
-
-    const query = `
-      SELECT DISTINCT 
-        to_char(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul', 'HH24') AS kst_hour
-      FROM airport_wait_time
-      WHERE ${where.join(' AND ')}
-      ORDER BY kst_hour ASC
-    `;
-
-    const [rows] = await sequelize.query(query);
-    const hours = rows.map(r => r.kst_hour);
-    res.json(hours);
+    const hours = await AirportWaitTime.findAll({
+      where,
+      attributes: [
+        [Sequelize.fn('DISTINCT', Sequelize.fn('SUBSTRING', Sequelize.col('processed_at'), 1, 2)), 'hour'],
+      ],
+      order: [[Sequelize.literal('hour'), 'ASC']],
+    });
+    const hourList = hours.map((row) => row.get('hour'));
+    res.json(hourList);
   } catch (err) {
     console.error('❌ 시간 조회 실패:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
 
-// GET /api/wait-times/airports
+// ✅ 공항 코드 목록 조회
 router.get('/airports', async (req, res) => {
   try {
-    const result = await AirportWaitTime.findAll({
+    const airports = await AirportWaitTime.findAll({
       attributes: [
-        [Sequelize.fn('DISTINCT', Sequelize.col('airport_code')), 'airport_code']
+        [Sequelize.fn('DISTINCT', Sequelize.col('airport_code')), 'airport'],
       ],
-      order: [[Sequelize.col('airport_code'), 'ASC']]
+      order: [[Sequelize.col('airport'), 'ASC']],
     });
-
-    const airports = result.map(row => row.getDataValue('airport_code'));
-    res.json(airports);
+    const airportList = airports.map((row) => row.get('airport'));
+    res.json(airportList);
   } catch (err) {
-    console.error('❌ 공항 목록 조회 실패:', err);
+    console.error('❌ 공항 조회 실패:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
-
-
 
 // ✅ 대기시간 조회 with 조건
 router.get('/wait-times', async (req, res) => {

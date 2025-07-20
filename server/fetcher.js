@@ -1,5 +1,4 @@
 import axios from 'axios';
-import pool from './db.js';
 import qs from 'qs';
 import dotenv from 'dotenv';
 import AirportWaitTime from './models/airportWaitTime.js';
