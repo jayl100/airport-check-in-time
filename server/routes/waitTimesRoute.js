@@ -11,12 +11,11 @@ router.get('/dates', async (req, res) => {
   try {
     const dates = await AirportWaitTime.findAll({
       attributes: [
-        [Sequelize.fn('DISTINCT', Sequelize.fn('DATE', Sequelize.col('created_at_kst'))), 'date'],
+        [Sequelize.fn('DISTINCT', Sequelize.fn('DATE', Sequelize.col('processed_datetime_kst'))), 'date'],
       ],
       order: [[Sequelize.literal('date'), 'DESC']],
     });
-    const dateList = dates.map((row) => row.get('date'));
-    res.json(dateList);
+    res.json(dates.map(r => r.get('date')));
   } catch (err) {
     console.error('❌ 날짜 조회 실패:', err);
     res.status(500).json({ error: '서버 오류' });
@@ -26,37 +25,36 @@ router.get('/dates', async (req, res) => {
 // ✅ 시간 목록 조회 (해당 날짜, 공항 기준으로 시(hour)만 추출)
 router.get('/hours', async (req, res) => {
   const { date, airport } = req.query;
-
   if (!date) return res.status(400).json({ error: '날짜가 필요합니다.' });
 
   try {
-    const where = Sequelize.where(
-      Sequelize.fn('DATE', Sequelize.col('created_at_kst')),
-      date
-    );
-
-    const conditions = { [Op.and]: [where] };
-    if (airport) {
-      conditions[Op.and].push({ airport_code: airport });
-    }
+    const whereConditions = [
+      Sequelize.where(
+        Sequelize.fn('DATE', Sequelize.col('processed_datetime_kst')),
+        date
+      )
+    ];
+    if (airport) whereConditions.push({ airport_code: airport });
 
     const hours = await AirportWaitTime.findAll({
-      where: conditions,
+      where: { [Op.and]: whereConditions },
       attributes: [
-        [Sequelize.fn('DISTINCT', Sequelize.fn('LEFT', Sequelize.col('processed_at'), 2)), 'hour'],
+        // to_char로 시(hour)만 추출한 뒤 DISTINCT
+        [
+          Sequelize.literal(`DISTINCT to_char("processed_datetime_kst", 'HH24')`),
+          'hour'
+        ]
       ],
-      order: [[Sequelize.literal('hour'), 'ASC']],
+      order: [[Sequelize.literal(`hour`), 'ASC']],
     });
 
-    const hourList = hours.map((row) => row.get('hour'));
-    res.json(hourList);
+    // 이미 '00' ~ '23' 문자열
+    res.json(hours.map(r => r.get('hour')));
   } catch (err) {
     console.error('❌ 시간 조회 실패:', err);
     res.status(500).json({ error: '서버 오류' });
   }
 });
-
-
 // ✅ 공항 목록 조회
 router.get('/airports', async (req, res) => {
   try {
@@ -78,53 +76,48 @@ router.get('/airports', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { airport, date, hour, page = 1, limit = 20 } = req.query;
+    const whereClauses = [];
 
-    const where = [];
-
-    if (airport) {
-      where.push({ airport_code: airport });
-    }
-
+    if (airport) whereClauses.push({ airport_code: airport });
     if (date) {
-      where.push(
+      whereClauses.push(
         Sequelize.where(
           Sequelize.fn('DATE', Sequelize.col('processed_datetime_kst')),
           date
         )
       );
     }
-
     if (hour) {
-      where.push(
+      whereClauses.push(
+        // processed_datetime_kst의 시가 쿼리파라미터 hour와 같아야
         Sequelize.where(
-          Sequelize.fn('LEFT', Sequelize.col('processed_at'), 2),
+          Sequelize.literal(`to_char("processed_datetime_kst", 'HH24')`),
           hour
         )
       );
     }
 
-    const whereCondition = { [Op.and]: where };
+    const where = whereClauses.length ? { [Op.and]: whereClauses } : {};
 
-    const results = await AirportWaitTime.findAll({
-      where: whereCondition,
+    const data = await AirportWaitTime.findAll({
+      where,
       order: [['processed_datetime_kst', 'DESC']],
-      limit: parseInt(limit),
-      offset: (parseInt(page) - 1) * parseInt(limit),
+      limit:  parseInt(limit,  10),
+      offset: (parseInt(page,  10) - 1) * parseInt(limit, 10),
     });
 
-    const total = await AirportWaitTime.count({ where: whereCondition });
+    const total = await AirportWaitTime.count({ where });
 
     res.json({
       total,
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page:       parseInt(page,  10),
+      limit:      parseInt(limit, 10),
       totalPages: Math.ceil(total / limit),
-      data: results,
+      data,
     });
   } catch (err) {
     console.error('❌ 대기시간 조회 에러:', err);
     res.status(500).json({ error: '대기시간 조회 실패' });
   }
 });
-
 export default router;

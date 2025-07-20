@@ -19,8 +19,8 @@ AirportWaitTime.init({
   wait_c: DataTypes.INTEGER,
   wait_d: DataTypes.INTEGER,
   created_at_kst: {
-    type: DataTypes.DATE,
-    allowNull: true
+    type: DataTypes.DATEONLY,
+    allowNull: true,
   },
   processed_datetime_kst: {
     type: DataTypes.DATE,
@@ -34,16 +34,23 @@ AirportWaitTime.init({
 });
 
 AirportWaitTime.beforeCreate((instance) => {
-  const createdAtKST = dayjs(instance.created_at).tz('Asia/Seoul');
-  instance.created_at_kst = createdAtKST.toDate();
+  // 1) 지금 KST 시각
+  const nowKst = dayjs().tz('Asia/Seoul');
 
-  const processedTime = instance.processed_at; // e.g. '23:55'
-  const processedDatetimeKST = dayjs(
-    `${createdAtKST.format('YYYY-MM-DD')} ${processedTime}`,
-    'YYYY-MM-DD HH:mm'
-  ).toDate();
+  // 2) API에서 넘어온 'HH:mm' 파싱
+  const [hh, mm] = instance.processed_at.split(':').map(Number);
 
-  instance.processed_datetime_kst = processedDatetimeKST;
+  // 3) 오늘 날짜에 그 시각 붙여본다
+  let dt = nowKst.hour(hh).minute(mm).second(0).millisecond(0);
+
+  // 4) 만약 그 시각이 아직 오지 않은(== 미래) 시각이면, 전날로 조정
+  if (dt.isAfter(nowKst)) {
+    dt = dt.subtract(1, 'day');
+  }
+
+  // 5) 최종 datetime 과 날짜 컬럼에 반영
+  instance.processed_datetime_kst = dt.toDate();
+  instance.created_at_kst       = dt.format('YYYY-MM-DD');
 });
 
 export default AirportWaitTime;
