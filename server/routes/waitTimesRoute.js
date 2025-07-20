@@ -66,35 +66,58 @@ router.get('/airports', async (req, res) => {
 });
 
 // ✅ 대기시간 조회 with 조건
-router.get('/wait-times', async (req, res) => {
+// ✅ routes/waitTimesRoute.js
+
+router.get('/', async (req, res) => {
   try {
     const { airport, date, hour, page = 1, limit = 20 } = req.query;
-    const where = {};
+    const whereConditions = [];
 
-    if (airport) where.airport_code = airport;
-    if (date)
-      where.created_at = Sequelize.where(
-        Sequelize.fn('DATE', Sequelize.col('created_at')),
-        date
+    if (airport) {
+      whereConditions.push({ airport_code: airport });
+    }
+
+    if (date) {
+      whereConditions.push(
+        Sequelize.where(
+          Sequelize.fn('DATE', Sequelize.col('created_at_kst')),
+          date
+        )
       );
-    if (hour)
-      where.processed_at = Sequelize.where(
-        Sequelize.fn('LEFT', Sequelize.col('processed_at'), 2),
-        hour
+    }
+
+    if (hour) {
+      whereConditions.push(
+        Sequelize.where(
+          Sequelize.fn('LEFT', Sequelize.col('processed_at'), 2),
+          hour
+        )
       );
+    }
 
     const results = await AirportWaitTime.findAll({
-      where,
-      order: [['created_at', 'DESC']],
+      where: {
+        [Op.and]: whereConditions,
+      },
+      order: [['created_at_kst', 'DESC']],
       limit: parseInt(limit),
       offset: (parseInt(page) - 1) * parseInt(limit),
     });
 
-    res.json(results);
+    const total = await AirportWaitTime.count({ whereConditions });
+
+    res.json({
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+      data: results,
+    });
   } catch (err) {
     console.error('❌ 대기시간 조회 에러:', err);
     res.status(500).json({ error: '대기시간 조회 실패' });
   }
 });
+
 
 export default router;

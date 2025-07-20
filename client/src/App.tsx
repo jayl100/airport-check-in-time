@@ -125,7 +125,6 @@ function App() {
       <img src="/GDT_favicon.svg" alt="logo" height="48px" />
       <h1>공항 탑승시간 측정</h1>
       <p>현재 김포공항과 제주공항만 서비스합니다.</p>
-
       <div>
         <label>
           공항:

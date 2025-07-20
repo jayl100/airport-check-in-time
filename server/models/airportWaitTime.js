@@ -19,7 +19,7 @@ AirportWaitTime.init({
   wait_c: DataTypes.INTEGER,
   wait_d: DataTypes.INTEGER,
   created_at_kst: {
-    type: DataTypes.DATEONLY,
+    type: DataTypes.DATE,
     allowNull: true
   },
 }, {
@@ -30,7 +30,7 @@ AirportWaitTime.init({
 });
 
 AirportWaitTime.beforeCreate((instance) => {
-  const kstDate = dayjs(instance.created_at).tz('Asia/Seoul').format('YYYY-MM-DD');
+  const kstDate = dayjs(instance.created_at).tz('Asia/Seoul').toDate();
   instance.created_at_kst = kstDate;
 });
 
