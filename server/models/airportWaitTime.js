@@ -18,10 +18,6 @@ AirportWaitTime.init({
   wait_b: DataTypes.INTEGER,
   wait_c: DataTypes.INTEGER,
   wait_d: DataTypes.INTEGER,
-  created_at_kst: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
-  },
   processed_datetime_kst: {
     type: DataTypes.DATE,
     allowNull: true,
@@ -50,7 +46,6 @@ AirportWaitTime.beforeCreate((instance) => {
 
   // 5) 최종 datetime 과 날짜 컬럼에 반영
   instance.processed_datetime_kst = dt.toDate();
-  instance.created_at_kst       = dt.format('YYYY-MM-DD');
 });
 
 export default AirportWaitTime;
