@@ -1,14 +1,21 @@
 import http from '../lib/http';
 
-export async function getWaitTimes(params: {
-  airport?: string;
-  date?: string;
-  hour?: string;
+export interface WaitTimesParams {
+  airport: string;
+  date: string;
+  hour: string;
   page?: number;
   limit?: number;
-}) {
+}
+
+export async function getWaitTimes(params: WaitTimesParams) {
   const response = await http.get('/api/wait-times/', { params });
   return response.data;
+}
+
+// 공항 목록 조회
+export async function getAvailableAirports() {
+  return http.get('/api/wait-times/airports');
 }
 
 // 날짜 목록 조회
@@ -18,12 +25,7 @@ export async function getAvailableDates() {
 
 // 시간 목록 조회
 export async function getAvailableHours(date: string, airport?: string) {
-  return http.get('/api/wait-times/hours', {
+  return http.get(`/api/wait-times/hours?`, {
     params: { date, airport },
   });
-}
-
-// 공항 목록 조회
-export async function getAvailableAirports() {
-  return http.get('/api/wait-times/airports');
 }
