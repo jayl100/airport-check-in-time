@@ -71,7 +71,7 @@ export default function ClientHomePage({ initialAirports, initialDates }: Props)
   return (
     <>
       <div className="mb-10 bg-gray-100 p-6 rounded-md">
-        <Image src="/GDT_favicon.svg" alt="logo" height={48} className="mx-auto mb-2" />
+        <Image src="/GDT_favicon.svg" alt="logo" height={48} width={48} className="mx-auto mb-2" />
         <h1 className="text-2xl font-bold">공항 탑승시간 측정</h1>
         <p className="text-sm text-gray-600">현재 김포공항과 제주공항만 서비스합니다.</p>
       </div>
