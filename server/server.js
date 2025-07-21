@@ -3,18 +3,24 @@ import dotenv from 'dotenv';
 import express from 'express';
 import fetchAndSaveWaitTime from './fetcher.js';
 import cors from 'cors';
-import AirportWaitTime from './models/airportWaitTime.js';
 import { initializeDB } from './db/init.js';
-import { Op, Sequelize } from 'sequelize';
 import waitTimesRouter from './routes/waitTimesRoute.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = [process.env.URL_LOCAL, process.env.URL_URL_CLIENT];
 
-app.use(cors());
-
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+}));
 app.get('/', (req, res) => res.send('⏱️ 공항 대기시간 수집기 작동 중'));
 app.use('/api/wait-times', waitTimesRouter);
 

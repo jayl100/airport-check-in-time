@@ -15,10 +15,10 @@ export default function WaitTimesTable({ data }: Props) {
         <ThStyled>공항</ThStyled>
         <ThStyled>처리 시각</ThStyled>
         <ThStyled>전체 평균</ThStyled>
-        <ThStyled>Gate A</ThStyled>
-        <ThStyled>Gate B</ThStyled>
-        <ThStyled>Gate C</ThStyled>
-        <ThStyled>Gate D</ThStyled>
+        <ThStyled>체크인 & 수화물</ThStyled>
+        <ThStyled>신원확인</ThStyled>
+        <ThStyled>보안검사</ThStyled>
+        <ThStyled>비행기 탑승</ThStyled>
       </TheadTrStyled>
       </thead>
       <tbody>
@@ -66,7 +66,7 @@ const TdStyled = styled.td`
     font-size: 1rem;
     text-align: center;
     
-    &:nth-child(2) {
+    &:nth-child(3) {
         background-color: #f9f9f9;
     }
 `;
