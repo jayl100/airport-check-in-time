@@ -26,18 +26,19 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: {children: React.ReactNode}) {
+  const gaId = process.env.NEXT_PUBLIC_GA;
+  const gtmId = process.env.NEXT_PUBLIC_GTM;
+
   return (
     <html lang="ko">
     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
     <ReactQueryProvider>
       {children}
     </ReactQueryProvider>
-    {process.env.NEXT_PUBLIC_GA && process.env.NEXT_PUBLIC_GTM ? (
       <>
-        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM} />
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA} />
+        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM!} />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA!} />
       </>
-    ) : null}
     </body>
     </html>
   );
