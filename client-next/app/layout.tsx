@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import ReactQueryProvider from '@/components/ReactQueryProvider';
+import GoogleAnalytics from '@/lib/GoogleAnalytics';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -27,6 +28,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    {process.env.NEXT_PUBLIC_GA ? (
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA} />
+    ) : null }
     <ReactQueryProvider>
       {children}
     </ReactQueryProvider>
