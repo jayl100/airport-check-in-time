@@ -28,12 +28,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
     <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-    {process.env.NEXT_PUBLIC_GA ? (
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA} />
-    ) : null }
     <ReactQueryProvider>
       {children}
     </ReactQueryProvider>
+    {process.env.NEXT_PUBLIC_GA ? (
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA} />
+    ) : null }
     </body>
     </html>
   );
