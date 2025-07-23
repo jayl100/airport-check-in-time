@@ -101,7 +101,7 @@ router.get('/', async (req, res) => {
 
     const data = await AirportWaitTime.findAll({
       where,
-      order: [['processed_datetime_kst', 'DESC']],
+      order: [['processed_datetime_kst', 'ASC']],
       limit:  parseInt(limit,  10),
       offset: (parseInt(page,  10) - 1) * parseInt(limit, 10),
     });

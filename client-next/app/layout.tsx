@@ -1,5 +1,3 @@
-// app/layout.tsx
-
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
@@ -18,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '공항 탑승시간 측정',
+  title: '실시간 공항 탑승 수속시간',
   description: '공항 대기시간 조회 서비스',
   icons: {
     icon: '/GDT_favicon.svg',
@@ -36,8 +34,8 @@ export default function RootLayout({ children }: {children: React.ReactNode}) {
       {children}
     </ReactQueryProvider>
       <>
-        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM!} />
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA!} />
+        <GoogleTagManager gtmId={gtmId!} />
+        <GoogleAnalytics gaId={gaId!} />
       </>
     </body>
     </html>

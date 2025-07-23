@@ -1,5 +1,7 @@
 import ClientHomePage from '@/components/ClientHomePage';
 import { getAvailableAirports, getAvailableDates } from '@/lib/api';
+import Container from '@/components/Container';
+import Head from '@/components/Head';
 
 export default async function Page() {
   // 서버에서 미리 받아오는 초기 데이터
@@ -7,11 +9,14 @@ export default async function Page() {
   const dates = await getAvailableDates();
 
   return (
-    <main className="max-w-screen-lg mx-auto px-4 py-16 text-center">
-      <ClientHomePage
-        initialAirports={airports}
-        initialDates={dates}
-      />
-    </main>
+    <>
+      <Head />
+      <Container>
+        <ClientHomePage
+          initialAirports={airports}
+          initialDates={dates}
+        />
+      </Container>
+    </>
   );
 }

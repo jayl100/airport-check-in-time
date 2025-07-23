@@ -59,3 +59,7 @@ body {
 .react-select__menu {
   z-index: 9999;
 }
+
+.react-select__option--is-focused {
+  background-color: #1a6f54;
+}
